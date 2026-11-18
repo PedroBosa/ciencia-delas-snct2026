@@ -1,0 +1,853 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  titulo: string;
+  descricao?: string;
+  comBarraPolegar?: boolean;
+}
+
+const {
+  titulo,
+  descricao = 'Mulheres que criaram a computação e pesquisadoras que fazem ciência no Nordeste e em todo o Brasil. Projeto do curso de TADS na 23ª SNCT 2026.',
+  comBarraPolegar = false,
+} = Astro.props;
+
+const pathname = Astro.url.pathname;
+const ehHome = pathname === '/';
+const ehLinha = pathname.startsWith('/linha-do-tempo');
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titulo}</title>
+    <meta name="description" content={descricao} />
+    <meta name="theme-color" content="#43318C" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/marcas/ciencia-delas-app-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class:list={[{ 'tem-barra-polegar': comBarraPolegar }]}>
+    <a href="#conteudo-principal" class="skip">Pular para o conteúdo</a>
+
+    <header class="topo no-print" id="topo-site">
+      <div class="wrap topo-interno">
+        <a href="/" class="topo-marca" aria-current={ehHome ? 'page' : undefined}>
+          <span class="topo-selo">23ª SNCT</span>
+          <span class="topo-titulo">Ciência Delas</span>
+        </a>
+
+        <nav aria-label="Navegação principal" class="topo-nav">
+          <div class="nav-ancoras">
+            <a href="/#mural" class="nav-link" data-nav-secao="mural">Pesquisadoras</a>
+            <a href="/#binarios" class="nav-link" data-nav-secao="binarios">Binário</a>
+            <a href="/#iniciativas" class="nav-link" data-nav-secao="iniciativas">Projetos</a>
+          </div>
+          <span class="nav-divisor" aria-hidden="true"></span>
+          <a
+            href="/linha-do-tempo"
+            class="nav-destaque"
+            aria-current={ehLinha ? 'page' : undefined}
+          >
+            <span>Linha do tempo</span>
+            <svg class="icone-nav-destaque" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+              <path
+                d="M3 7h8M7.5 3.5L11 7l-3.5 3.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.65"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="conteudo-principal">
+      <slot />
+    </main>
+
+    <footer class="rodape no-print">
+      <div class="wrap">
+        <div class="rodape-parceiros" aria-label="Realização e apoio institucional">
+          <p class="rodape-titulo-parceiros">Apoio e parceiros</p>
+
+          <div class="regua-marcas">
+            <div class="grupo-marcas">
+              <span class="rotulo-marca">Realização</span>
+              <div class="linha-logos">
+                <img
+                  src="/marcas/ifpi-floriano-branca.svg"
+                  alt="Instituto Federal do Piauí, Campus Floriano"
+                  width="166"
+                  height="46"
+                  loading="lazy"
+                  decoding="async"
+                  class="logo-rodape logo-ifpi"
+                />
+              </div>
+            </div>
+
+            <div class="grupo-marcas">
+              <span class="rotulo-marca">Articulação nacional</span>
+              <div class="linha-logos">
+                <img
+                  src="/marcas/snct-2026-branca-1x.png"
+                  srcset="/marcas/snct-2026-branca-1x.png 1x, /marcas/snct-2026-branca-2x.png 2x, /marcas/snct-2026-branca-3x.png 3x"
+                  alt="23ª Semana Nacional de Ciência e Tecnologia"
+                  width="118"
+                  height="46"
+                  loading="lazy"
+                  decoding="async"
+                  class="logo-rodape logo-snct"
+                />
+                <img
+                  src="/marcas/pop-ciencia-branca-1x.png"
+                  srcset="/marcas/pop-ciencia-branca-1x.png 1x, /marcas/pop-ciencia-branca-2x.png 2x, /marcas/pop-ciencia-branca-3x.png 3x"
+                  alt="Pop Ciência: Programa Nacional de Popularização da Ciência"
+                  width="50"
+                  height="54"
+                  loading="lazy"
+                  decoding="async"
+                  class="logo-rodape logo-pop"
+                />
+                <img
+                  src="/marcas/mcti-governo-branca.svg"
+                  alt="Ministério da Ciência, Tecnologia e Inovação e Governo do Brasil"
+                  width="207"
+                  height="42"
+                  loading="lazy"
+                  decoding="async"
+                  class="logo-rodape logo-mcti"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rodape-interno">
+          <div class="rodape-bloco">
+            <p class="rodape-edicao">23ª Semana Nacional de Ciência e Tecnologia · 2026</p>
+            <p class="rodape-mote">
+              Ciência Delas: a ciência é delas, é com elas, e é para todos nós.
+            </p>
+            <p class="rodape-sub">
+              Projeto do curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TADS) · IFPI
+              Campus Floriano.
+            </p>
+          </div>
+
+          <nav aria-label="Links do rodapé" class="rodape-links">
+            <a href="/#mural">Pesquisadoras</a>
+            <a href="/#binarios">Código binário</a>
+            <a href="/#iniciativas">Projetos</a>
+            <a href="/linha-do-tempo">Linha do tempo</a>
+            <a href="/qrcodes">QR Codes</a>
+          </nav>
+        </div>
+      </div>
+    </footer>
+
+    <button
+      type="button"
+      class="btn-topo no-print"
+      id="btn-voltar-topo"
+      aria-label="Voltar ao topo da página"
+      title="Voltar ao topo"
+    >
+      <svg class="anel-progresso" width="46" height="46" viewBox="0 0 46 46" aria-hidden="true">
+        <circle class="anel-fundo" cx="23" cy="23" r="21.5" />
+        <circle class="anel-trilha" cx="23" cy="23" r="21.5" />
+        <circle class="anel-ativo" id="anel-topo-ativo" cx="23" cy="23" r="21.5" />
+      </svg>
+      <svg class="icone-topo" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+        <path
+          d="M10 15V5M5.5 9.5L10 5l4.5 4.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.85"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+
+    <script>
+      const topoSite = document.getElementById('topo-site');
+      const btnTopo = document.getElementById('btn-voltar-topo') as HTMLButtonElement | null;
+      const anelAtivo = document.getElementById('anel-topo-ativo') as SVGCircleElement | null;
+      const linksSecao = document.querySelectorAll<HTMLAnchorElement>('[data-nav-secao]');
+      const secoesHome = ['mural', 'binarios', 'iniciativas']
+        .map((id) => document.getElementById(id))
+        .filter((el): el is HTMLElement => Boolean(el));
+
+      if (btnTopo || topoSite) {
+        const CIRCUNFERENCIA = 2 * Math.PI * 21.5;
+        let rafScroll = 0;
+        let rafSubida = 0;
+
+        const atualizarScrollUi = () => {
+          rafScroll = 0;
+          const y = window.scrollY;
+
+          topoSite?.classList.toggle('rolado', y > 8);
+
+          if (secoesHome.length > 0 && linksSecao.length > 0) {
+            let ativa = '';
+            const linhaLeitura = y + 160;
+            for (const sec of secoesHome) {
+              if (sec.offsetTop <= linhaLeitura) ativa = sec.id;
+            }
+            linksSecao.forEach((a) => {
+              if (ativa && a.dataset.navSecao === ativa) {
+                a.setAttribute('aria-current', 'page');
+              } else {
+                a.removeAttribute('aria-current');
+              }
+            });
+          }
+
+          if (btnTopo) {
+            const maxScroll = Math.max(
+              1,
+              document.documentElement.scrollHeight - window.innerHeight
+            );
+            const visivel = y > 300;
+            btnTopo.classList.toggle('visivel', visivel);
+
+            if (anelAtivo && visivel) {
+              const progresso = Math.min(1, Math.max(0, y / maxScroll));
+              anelAtivo.style.strokeDashoffset = (CIRCUNFERENCIA * (1 - progresso)).toFixed(2);
+            }
+          }
+        };
+
+        const agendarAtualizacao = () => {
+          if (!rafScroll) rafScroll = window.requestAnimationFrame(atualizarScrollUi);
+        };
+
+        const cancelarSubida = () => {
+          if (rafSubida) {
+            window.cancelAnimationFrame(rafSubida);
+            rafSubida = 0;
+          }
+        };
+
+        window.addEventListener('scroll', agendarAtualizacao, { passive: true });
+        window.addEventListener('resize', agendarAtualizacao, { passive: true });
+        window.addEventListener('pageshow', atualizarScrollUi);
+        window.addEventListener('wheel', cancelarSubida, { passive: true });
+        window.addEventListener('touchstart', cancelarSubida, { passive: true });
+
+        btnTopo?.addEventListener('click', () => {
+          cancelarSubida();
+          const inicioY = window.scrollY;
+          if (inicioY <= 0) return;
+
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            window.scrollTo(0, 0);
+            return;
+          }
+
+          const duracao = 340;
+          const t0 = performance.now();
+
+          const passo = (agora: number) => {
+            const t = Math.min(1, (agora - t0) / duracao);
+            const ease = 1 - Math.pow(1 - t, 3);
+            window.scrollTo(0, Math.round(inicioY * (1 - ease)));
+            if (t < 1) {
+              rafSubida = window.requestAnimationFrame(passo);
+            } else {
+              rafSubida = 0;
+            }
+          };
+
+          rafSubida = window.requestAnimationFrame(passo);
+        });
+
+        atualizarScrollUi();
+      }
+
+      // Indicador deslizante suave para todos os controles segmentados (.abas)
+      document.querySelectorAll<HTMLElement>('.abas').forEach((grupo) => {
+        const indicador = document.createElement('span');
+        indicador.className = 'indicador-abas';
+        indicador.setAttribute('aria-hidden', 'true');
+        grupo.prepend(indicador);
+
+        const posicionar = (animar = true) => {
+          const ativa = grupo.querySelector<HTMLElement>(
+            '.aba[aria-pressed="true"], .aba[aria-selected="true"]'
+          );
+          if (!ativa) {
+            indicador.style.opacity = '0';
+            return;
+          }
+          if (!animar) indicador.style.transition = 'none';
+          indicador.style.opacity = '1';
+          indicador.style.width = `${ativa.offsetWidth}px`;
+          indicador.style.height = `${ativa.offsetHeight}px`;
+          indicador.style.transform = `translate3d(${ativa.offsetLeft}px, ${ativa.offsetTop}px, 0)`;
+          if (!animar) {
+            void indicador.offsetWidth;
+            indicador.style.transition = '';
+          }
+        };
+
+        posicionar(false);
+        grupo.classList.add('com-indicador');
+
+        const mutObs = new MutationObserver(() => posicionar(true));
+        grupo.querySelectorAll('.aba').forEach((btn) => {
+          mutObs.observe(btn, { attributes: true, attributeFilter: ['aria-pressed', 'aria-selected'] });
+        });
+
+        const resObs = new ResizeObserver(() => posicionar(false));
+        resObs.observe(grupo);
+      });
+
+      // Registro enxuto de Service Worker apenas em build de produção para cache offline na feira
+      if ('serviceWorker' in navigator) {
+        if (import.meta.env.PROD) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+          });
+        } else {
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            regs.forEach((reg) => reg.unregister());
+          });
+        }
+      }
+    </script>
+
+    <style>
+      .topo {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--borda);
+        transition: box-shadow 160ms var(--ease), border-color 160ms var(--ease);
+      }
+
+      .topo.rolado {
+        border-bottom-color: var(--borda-forte);
+        box-shadow: 0 4px 16px rgba(67, 49, 140, 0.08);
+      }
+
+      .topo-interno {
+        min-height: 3.85rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem 1.25rem;
+        padding-block: 0.75rem;
+      }
+
+      .topo-marca {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        text-decoration: none;
+        color: var(--violeta);
+        transition: opacity 150ms var(--ease);
+      }
+      .topo-marca:hover {
+        color: var(--violeta);
+        opacity: 0.88;
+      }
+
+      .topo-selo {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 0.24rem 0.56rem;
+        border-radius: 999px;
+        background: var(--violeta);
+        color: var(--amarelo);
+      }
+
+      .topo-titulo {
+        font-family: var(--f-display);
+        font-weight: 800;
+        font-size: 1.25rem;
+        letter-spacing: -0.02em;
+        color: var(--violeta);
+      }
+
+      .topo-nav {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.55rem;
+        font-size: var(--t-sm);
+      }
+
+      .nav-ancoras {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.22rem;
+      }
+
+      .nav-link {
+        display: inline-flex;
+        align-items: center;
+        height: 2.3rem;
+        padding: 0 0.82rem;
+        border-radius: 9px;
+        text-decoration: none;
+        font-weight: 600;
+        color: #374151;
+        transition:
+          color 160ms var(--ease),
+          background-color 160ms var(--ease);
+      }
+
+      .nav-link:hover {
+        color: var(--violeta);
+        background: #f2effa;
+      }
+
+      .nav-link[aria-current='page'] {
+        color: #ffffff;
+        background: var(--violeta);
+      }
+
+      .nav-link[aria-current='page']:hover {
+        color: #ffffff;
+        background: var(--violeta-escuro);
+      }
+
+      .nav-divisor {
+        width: 1px;
+        height: 1.3rem;
+        background: var(--borda-forte);
+        margin-inline: 0.15rem;
+      }
+
+      .nav-destaque {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.38rem;
+        height: 2.3rem;
+        padding: 0 0.95rem;
+        border-radius: var(--radius);
+        background: var(--amarelo);
+        color: var(--violeta);
+        font-weight: 700;
+        text-decoration: none;
+        transition:
+          background-color 170ms var(--ease),
+          color 170ms var(--ease),
+          box-shadow 170ms var(--ease),
+          transform 170ms var(--ease);
+      }
+
+      .icone-nav-destaque {
+        flex: none;
+        transition:
+          transform 170ms var(--ease),
+          color 170ms var(--ease);
+      }
+
+      .nav-destaque:hover,
+      .nav-destaque[aria-current='page'] {
+        background: var(--violeta);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(67, 49, 140, 0.22);
+      }
+
+      .nav-destaque:hover .icone-nav-destaque,
+      .nav-destaque[aria-current='page'] .icone-nav-destaque {
+        color: var(--amarelo);
+      }
+
+      .nav-destaque:hover .icone-nav-destaque {
+        transform: translateX(2px);
+      }
+
+      @media (max-width: 740px) {
+        .topo-interno {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 0.48rem 0.65rem;
+          padding-block: 0.55rem;
+          min-height: unset;
+        }
+        .topo-marca {
+          order: 1;
+          min-width: 0;
+        }
+        .topo-titulo {
+          font-size: 1.14rem;
+          white-space: nowrap;
+        }
+        .topo-nav {
+          display: contents;
+        }
+        .nav-divisor {
+          display: none;
+        }
+        .nav-destaque {
+          order: 2;
+          justify-self: end;
+          height: 2.05rem;
+          padding: 0 0.72rem;
+          gap: 0.28rem;
+          font-size: 0.8125rem;
+          border-radius: 8px;
+          white-space: nowrap;
+        }
+        .nav-ancoras {
+          order: 3;
+          grid-column: 1 / -1;
+          display: flex;
+          width: 100%;
+          align-items: center;
+          gap: 0.2rem;
+          padding: 0.2rem;
+          background: var(--bg-lavanda);
+          border: 1px solid var(--borda);
+          border-radius: 10px;
+        }
+        .nav-link {
+          flex: 1 1 auto;
+          justify-content: center;
+          text-align: center;
+          height: 1.95rem;
+          padding: 0 0.5rem;
+          border-radius: 7px;
+          font-size: 0.8125rem;
+          white-space: nowrap;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .topo-selo {
+          font-size: 0.64rem;
+          padding: 0.2rem 0.46rem;
+        }
+        .topo-titulo {
+          font-size: 1.04rem;
+        }
+        .nav-destaque {
+          font-size: 0.76rem;
+          padding: 0 0.58rem;
+          height: 1.92rem;
+        }
+        .nav-link {
+          font-size: 0.77rem;
+          padding: 0 0.35rem;
+        }
+      }
+
+      .rodape {
+        background: var(--violeta);
+        color: #ffffff;
+        padding-block: 2.6rem 2.5rem;
+      }
+
+      .tem-barra-polegar .rodape {
+        padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+      }
+      @media (min-width: 900px) {
+        .tem-barra-polegar .rodape {
+          padding-bottom: 2.5rem;
+        }
+      }
+
+      .rodape-parceiros {
+        padding-bottom: 2.1rem;
+        margin-bottom: 1.85rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      }
+
+      .rodape-titulo-parceiros {
+        font-family: var(--f-display);
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-align: center;
+        color: #ffffff;
+        margin-bottom: 1.65rem;
+      }
+
+      .rodape-titulo-parceiros::after {
+        content: '';
+        display: block;
+        width: 3rem;
+        height: 2.5px;
+        background: var(--amarelo);
+        border-radius: 2px;
+        margin: 0.5rem auto 0;
+      }
+
+      .regua-marcas {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 1.75rem 3.75rem;
+      }
+
+      .grupo-marcas {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.65rem;
+      }
+
+      @media (min-width: 820px) {
+        .grupo-marcas {
+          align-items: flex-start;
+        }
+      }
+
+      .rotulo-marca {
+        font-size: 0.625rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.74);
+        line-height: 1;
+      }
+
+      .linha-logos {
+        min-height: 54px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 1.35rem 2.4rem;
+      }
+
+      .logo-rodape {
+        width: auto;
+        display: block;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+
+      .logo-ifpi {
+        height: 46px;
+      }
+
+      .logo-snct {
+        height: 44px;
+      }
+
+      .logo-pop {
+        height: 54px;
+      }
+
+      .logo-mcti {
+        height: 42px;
+      }
+
+      @media (max-width: 520px) {
+        .linha-logos {
+          min-height: 48px;
+        }
+        .logo-ifpi {
+          height: 40px;
+        }
+        .logo-snct {
+          height: 38px;
+        }
+        .logo-pop {
+          height: 48px;
+        }
+        .logo-mcti {
+          height: 34px;
+        }
+      }
+
+      .rodape-interno {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1.5rem 2.5rem;
+      }
+
+      .rodape-bloco {
+        max-width: 52ch;
+      }
+
+      .rodape-edicao {
+        font-size: var(--t-xs);
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--amarelo);
+      }
+
+      .rodape-edicao::after {
+        content: '';
+        display: block;
+        width: 2.75rem;
+        height: 3px;
+        background: var(--amarelo);
+        border-radius: 2px;
+        margin-block: 0.45rem 0.65rem;
+      }
+
+      .rodape-mote {
+        font-family: var(--f-display);
+        font-weight: 700;
+        font-size: 1.08rem;
+        color: #ffffff;
+        margin-bottom: 0.3rem;
+      }
+
+      .rodape-sub {
+        font-size: var(--t-sm);
+        color: rgba(255, 255, 255, 0.82);
+        line-height: 1.5;
+      }
+
+      .rodape-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem 1.25rem;
+        font-size: var(--t-sm);
+        font-weight: 500;
+      }
+
+      .rodape-links a {
+        color: #ffffff;
+        text-decoration-color: rgba(255, 255, 255, 0.45);
+      }
+      .rodape-links a:hover {
+        color: var(--amarelo);
+        text-decoration-color: var(--amarelo);
+      }
+
+      /* Botão flutuante de retorno rápido ao topo (100% vetorial sem serrilhado) */
+      .btn-topo {
+        position: fixed;
+        right: clamp(1rem, 2.2vw, 1.75rem);
+        bottom: calc(1.35rem + env(safe-area-inset-bottom, 0px));
+        z-index: 45;
+        width: 46px;
+        height: 46px;
+        border-radius: 999px;
+        background: transparent;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        filter: drop-shadow(0 6px 14px rgba(24, 17, 56, 0.24));
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(0.5rem) scale(0.96);
+        pointer-events: none;
+        transition:
+          opacity 180ms var(--ease),
+          transform 180ms var(--ease),
+          visibility 180ms var(--ease),
+          color 150ms var(--ease);
+      }
+
+      .tem-barra-polegar .btn-topo {
+        bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+      }
+
+      @media (min-width: 900px) {
+        .tem-barra-polegar .btn-topo {
+          bottom: calc(1.35rem + env(safe-area-inset-bottom, 0px));
+        }
+      }
+
+      .btn-topo.visivel {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+      }
+
+      .btn-topo.visivel:hover {
+        color: var(--amarelo);
+        transform: translateY(-2px);
+      }
+
+      .btn-topo.visivel:hover .anel-fundo {
+        fill: var(--violeta-escuro);
+      }
+
+      .btn-topo.visivel:active {
+        transform: translateY(0) scale(0.96);
+      }
+
+      .btn-topo:focus-visible {
+        outline: 2px solid var(--ciano);
+        outline-offset: 3px;
+        border-radius: 999px;
+      }
+
+      .anel-progresso {
+        position: absolute;
+        inset: 0;
+        width: 46px;
+        height: 46px;
+        pointer-events: none;
+      }
+
+      .anel-fundo {
+        fill: var(--violeta);
+        transition: fill 150ms var(--ease);
+      }
+
+      .anel-trilha {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.26);
+        stroke-width: 2;
+      }
+
+      .anel-ativo {
+        fill: none;
+        stroke: var(--amarelo);
+        stroke-width: 2;
+        stroke-linecap: round;
+        transform: rotate(-90deg);
+        transform-origin: 23px 23px;
+        stroke-dasharray: 135.09;
+        stroke-dashoffset: 135.09;
+      }
+
+      .icone-topo {
+        position: relative;
+        transition: transform 150ms var(--ease);
+      }
+
+      .btn-topo.visivel:hover .icone-topo {
+        transform: translateY(-1px);
+      }
+
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+      }
+    </style>
+  </body>
+</html>

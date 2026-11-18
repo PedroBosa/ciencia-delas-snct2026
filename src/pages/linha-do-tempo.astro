@@ -1,0 +1,363 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { linhaDoTempo } from '../data/linha-do-tempo';
+import { miniatura, porSlug } from '../data/pesquisadoras';
+
+const total = linhaDoTempo.length;
+const totalBrasil = linhaDoTempo.filter((m) => m.escopo === 'brasil').length;
+const totalInt = linhaDoTempo.filter((m) => m.escopo === 'internacional').length;
+---
+
+<BaseLayout
+  titulo="Linha do tempo · Ciência Delas · SNCT 2026"
+  descricao="De Ada Lovelace em 1843 às pesquisadoras brasileiras de hoje: a história da computação contada pelo que as mulheres criaram na prática."
+>
+  <header class="faixa-cabecalho">
+    <div class="wrap">
+      <h1 class="titulo-secao filete-ciano">Linha do tempo</h1>
+      <p class="intro-pagina">
+        Dos primeiros algoritmos de 1843 às pesquisas atuais nas universidades brasileiras,
+        mostrando o que cada mulher construiu na prática.
+      </p>
+
+      <div class="barra-abas">
+        <div class="abas" role="group" aria-label="Filtrar linha do tempo">
+          <button type="button" class="aba" data-filtro-linha="todas" aria-pressed="true">
+            Tudo <span class="qtd">{total}</span>
+          </button>
+          <button type="button" class="aba" data-filtro-linha="brasil" aria-pressed="false">
+            No Brasil <span class="qtd">{totalBrasil}</span>
+          </button>
+          <button type="button" class="aba" data-filtro-linha="internacional" aria-pressed="false">
+            No mundo <span class="qtd">{totalInt}</span>
+          </button>
+        </div>
+        <p class="meta" id="status-linha" aria-live="polite">{total} momentos</p>
+      </div>
+    </div>
+  </header>
+
+  <section class="wrap secao-trilha" aria-label="Linha do tempo de 1843 a 2026">
+    <ol role="list" class="trilha-cronologica">
+      {
+        linhaDoTempo.map((m, i) => {
+          const perfis = m.slugs
+            .map((s) => porSlug.get(s))
+            .filter((x): x is NonNullable<typeof x> => Boolean(x));
+
+          return (
+            <li
+              class:list={[
+                'item-trilha',
+                m.escopo === 'brasil' ? 'trilha-br' : 'trilha-int',
+                i === linhaDoTempo.length - 1 && 'ultimo-visivel',
+              ]}
+              data-escopo-marco={m.escopo}
+            >
+              <div class="col-tempo">
+                <span class="mono ano">{m.ano}</span>
+                <span class:list={['selo-origem', m.escopo === 'brasil' ? 'origem-br' : 'origem-int']}>
+                  {m.escopo === 'brasil' ? 'Brasil' : 'Mundo'}
+                </span>
+              </div>
+
+              <div class="marcador-eixo" aria-hidden="true">
+                <span class="ponto-eixo"></span>
+              </div>
+
+              <div class="cartao-marco">
+                <h2>{m.titulo}</h2>
+                <p class="descricao">{m.texto}</p>
+
+                {perfis.length > 0 && (
+                  <div class="links-perfis">
+                    {perfis.map((p) => (
+                      <a href={`/pesquisadoras/${p.slug}`} class="pilula-perfil">
+                        {p.foto && (
+                          <img
+                            src={miniatura(p) ?? p.foto}
+                            alt=""
+                            width="24"
+                            height="24"
+                            loading="lazy"
+                            class="avatar-pilula"
+                          />
+                        )}
+                        <span>{p.nomeCurto}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })
+      }
+    </ol>
+  </section>
+</BaseLayout>
+
+<script>
+  const botoes = document.querySelectorAll<HTMLButtonElement>('[data-filtro-linha]');
+  const itens = document.querySelectorAll<HTMLLIElement>('[data-escopo-marco]');
+  const status = document.getElementById('status-linha');
+
+  botoes.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const alvo = btn.dataset.filtroLinha ?? 'todas';
+      botoes.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+
+      let visiveis = 0;
+      let ultimoLiVisivel: HTMLLIElement | null = null;
+      itens.forEach((li) => {
+        const corresponde = alvo === 'todas' || li.dataset.escopoMarco === alvo;
+        li.hidden = !corresponde;
+        li.classList.remove('ultimo-visivel');
+        if (corresponde) {
+          visiveis++;
+          ultimoLiVisivel = li;
+        }
+      });
+      if (ultimoLiVisivel) {
+        (ultimoLiVisivel as HTMLLIElement).classList.add('ultimo-visivel');
+      }
+
+      if (status) {
+        status.textContent = `${visiveis} ${visiveis === 1 ? 'momento' : 'momentos'}`;
+      }
+    });
+  });
+</script>
+
+<style>
+  .faixa-cabecalho {
+    background: var(--bg-lavanda);
+    border-bottom: 1px solid var(--borda);
+    padding-top: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  }
+
+  .filete-ciano {
+    --cor-filete: var(--ciano);
+    font-size: var(--t-2xl);
+  }
+
+  .intro-pagina {
+    color: var(--ink-2);
+    max-width: 58ch;
+    margin-block: 0.75rem 1.25rem;
+  }
+
+  .barra-abas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.65rem 1rem;
+    padding-bottom: 1.35rem;
+  }
+
+  /* Trilha cronológica com eixo visual */
+  .secao-trilha {
+    padding-block: 2rem 3rem;
+  }
+
+  .trilha-cronologica {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .item-trilha {
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+    column-gap: 0.85rem;
+    position: relative;
+    padding-bottom: 1.5rem;
+  }
+
+  .item-trilha[hidden] {
+    display: none;
+  }
+
+  @media (min-width: 760px) {
+    .item-trilha {
+      grid-template-columns: 8.5rem 2rem 1fr;
+      column-gap: 1rem;
+      padding-bottom: 1.75rem;
+    }
+  }
+
+  .col-tempo {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.45rem;
+  }
+
+  @media (min-width: 760px) {
+    .col-tempo {
+      grid-column: 1;
+      grid-row: 1;
+      flex-direction: column;
+      align-items: flex-end;
+      text-align: right;
+      gap: 0.25rem;
+      margin-bottom: 0;
+      padding-top: 0.9rem;
+    }
+  }
+
+  .marcador-eixo {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
+  @media (min-width: 760px) {
+    .marcador-eixo {
+      grid-column: 2;
+      grid-row: 1;
+    }
+  }
+
+  .marcador-eixo::before {
+    content: '';
+    position: absolute;
+    top: 0.725rem;
+    bottom: calc(-1.5rem - 0.725rem);
+    width: 2px;
+    background: var(--borda-forte);
+  }
+
+  @media (min-width: 760px) {
+    .marcador-eixo::before {
+      top: 1.575rem;
+      bottom: calc(-1.75rem - 1.575rem);
+    }
+  }
+
+  .item-trilha.ultimo-visivel .marcador-eixo::before {
+    display: none;
+  }
+
+  .ponto-eixo {
+    position: relative;
+    z-index: 1;
+    margin-top: 0.3rem;
+    width: 0.85rem;
+    height: 0.85rem;
+    border-radius: 999px;
+    border: 2.5px solid #ffffff;
+    box-shadow: 0 0 0 2px var(--cor-marco, var(--ciano));
+    background: var(--cor-marco, var(--ciano));
+  }
+
+  @media (min-width: 760px) {
+    .ponto-eixo {
+      margin-top: 1.15rem;
+    }
+  }
+
+  .trilha-br {
+    --cor-marco: var(--magenta);
+  }
+  .trilha-int {
+    --cor-marco: var(--ciano);
+  }
+
+  .ano {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--violeta);
+  }
+
+  .selo-origem {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .origem-br {
+    color: var(--magenta);
+  }
+
+  .origem-int {
+    color: var(--ciano-escuro);
+  }
+
+  .cartao-marco {
+    grid-column: 2;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid rgba(67, 49, 140, 0.1);
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(49, 35, 107, 0.035);
+  }
+
+  @media (min-width: 760px) {
+    .cartao-marco {
+      grid-column: 3;
+      grid-row: 1;
+      padding: 1.1rem 1.3rem;
+    }
+  }
+
+  .cartao-marco h2 {
+    font-size: clamp(1.08rem, 1rem + 0.4vw, 1.28rem);
+    font-weight: 700;
+    color: var(--violeta);
+    margin-bottom: 0.35rem;
+  }
+
+  .descricao {
+    max-width: 62ch;
+    color: var(--ink);
+    font-size: var(--t-sm);
+    line-height: 1.58;
+  }
+
+  @media (min-width: 760px) {
+    .descricao {
+      font-size: var(--t-base);
+    }
+  }
+
+  .links-perfis {
+    margin-top: 0.7rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .pilula-perfil {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.22rem 0.65rem 0.22rem 0.28rem;
+    border-radius: 999px;
+    background: var(--bg-lavanda);
+    border: 1px solid var(--borda-forte);
+    font-size: var(--t-xs);
+    font-weight: 600;
+    color: var(--violeta);
+    text-decoration: none;
+  }
+
+  .avatar-pilula {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    object-fit: cover;
+    object-position: center 20%;
+    border: 1px solid var(--borda-forte);
+    flex: none;
+  }
+
+  .pilula-perfil:hover {
+    border-color: var(--magenta);
+    color: var(--magenta);
+  }
+</style>

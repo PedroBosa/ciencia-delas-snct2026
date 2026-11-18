@@ -1,0 +1,772 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RetratoEditorial from '../../components/RetratoEditorial.astro';
+import {
+  miniatura,
+  pesquisadoras,
+  relacionadas,
+  rotuloLocal,
+  vizinhas,
+  type Pesquisadora,
+} from '../../data/pesquisadoras';
+import { linhaDoTempo } from '../../data/linha-do-tempo';
+import { gerarQrSvg } from '../../lib/qrcode';
+
+export function getStaticPaths() {
+  return pesquisadoras.map((pesquisadora) => ({
+    params: { slug: pesquisadora.slug },
+    props: { pesquisadora },
+  }));
+}
+
+interface Props {
+  pesquisadora: Pesquisadora;
+}
+
+const { pesquisadora: p } = Astro.props;
+const { indice, total, anterior, proxima } = vizinhas(p.slug);
+const conexoes = relacionadas(p, 4);
+const marcosLinha = linhaDoTempo.filter((m) => m.slugs.includes(p.slug));
+
+const urlCanonica = new URL(`/pesquisadoras/${p.slug}`, Astro.site ?? 'http://localhost:4321').toString();
+const qrSvg = await gerarQrSvg(urlCanonica, { tinta: '#43318C', fundo: '#FFFFFF', margem: 1 });
+---
+
+<BaseLayout
+  titulo={`${p.nomeCurto} · Ciência Delas`}
+  descricao={`${p.nome}: ${p.contribuicaoPratica}`}
+  comBarraPolegar={true}
+>
+  <article class:list={['perfil', `escopo-${p.escopo}`]}>
+    <!-- Cabeçalho em Lavanda Suave -->
+    <header class="faixa-topo-perfil">
+      <div class="wrap">
+        <div class="trilha-perfil meta">
+          <a href="/#mural">Pesquisadoras</a>
+          <span aria-hidden="true">·</span>
+          <span>{p.estadoOuPais}</span>
+          <span aria-hidden="true">·</span>
+          <span class="mono">{p.instituicaoSigla}</span>
+          {p.inMemoriam && (
+            <>
+              <span aria-hidden="true">·</span>
+              <em>in memoriam</em>
+            </>
+          )}
+        </div>
+
+        <div class="grade-topo">
+          <div class="topo-texto">
+            <h1>{p.nome}</h1>
+            <p class="abertura-pratica">{p.contribuicaoPratica}</p>
+          </div>
+
+          <div class="topo-retrato">
+            <RetratoEditorial pesquisadora={p} prioridade={true} />
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- História + Ficha lateral -->
+    <div class="wrap grade-corpo">
+      <div class="coluna-texto">
+        <div class="prose">
+          {p.biografia.map((paragrafo) => <p>{paragrafo}</p>)}
+        </div>
+
+        {
+          marcosLinha.length > 0 && (
+            <div class="referencia-linha">
+              <h2 class="rotulo-ficha">Na linha do tempo</h2>
+              <ul role="list" class="lista-marcos-linha">
+                {marcosLinha.map((m) => (
+                  <li>
+                    <span class="mono ano-ref">{m.ano}</span>
+                    <a href="/linha-do-tempo">{m.titulo}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+      </div>
+
+      <aside class="coluna-ficha" aria-label="Informações rápidas">
+        <dl class="ficha-dl">
+          <div>
+            <dt>Atuação</dt>
+            <dd>{p.atuacao}</dd>
+          </div>
+          <div>
+            <dt>Instituição</dt>
+            <dd>{p.instituicao}</dd>
+          </div>
+          <div>
+            <dt>Local</dt>
+            <dd>{rotuloLocal(p)}</dd>
+          </div>
+          <div>
+            <dt>Área</dt>
+            <dd>{p.campo}</dd>
+          </div>
+        </dl>
+
+        {
+          p.marcos.length > 0 && (
+            <div class="secao-ficha">
+              <h2 class="rotulo-ficha">Destaques</h2>
+              <ul role="list" class="lista-marcos">
+                {p.marcos.map((marco) => <li>{marco}</li>)}
+              </ul>
+            </div>
+          )
+        }
+
+        <div
+          class="secao-ficha bloco-qr"
+          id="bloco-qr-perfil"
+          data-slug={p.slug}
+          data-nome={p.nome}
+          data-resumo={p.resumoCurto}
+          data-url-build={urlCanonica}
+        >
+          <div class="qr-quadro" id="qr-perfil-quadro" set:html={qrSvg} aria-hidden="true" />
+          <div class="qr-dados">
+            <p class="rotulo-qr">Compartilhar perfil</p>
+            <div class="qr-links">
+              <button type="button" class="botao-texto" id="btn-compartilhar-nativo" hidden>
+                Compartilhar
+              </button>
+              <button type="button" class="botao-texto" id="btn-copiar-link">
+                Copiar link da página
+              </button>
+            </div>
+            <div class="qr-downloads">
+              <span class="meta">Baixar QR:</span>
+              <button
+                type="button"
+                class="botao-texto"
+                id="btn-baixar-qr-svg"
+                aria-label={`Baixar QR Code de ${p.nomeCurto} em SVG`}
+              >
+                SVG
+              </button>
+              <span class="meta" aria-hidden="true">·</span>
+              <button
+                type="button"
+                class="botao-texto"
+                id="btn-baixar-qr-png"
+                aria-label={`Baixar QR Code de ${p.nomeCurto} em PNG`}
+              >
+                PNG
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Leia também -->
+    {
+      conexoes.length > 0 && (
+        <section class="wrap secao-relacionadas" aria-labelledby="titulo-relacionadas">
+          <h2 id="titulo-relacionadas" class="titulo-secao filete-magenta">Leia também</h2>
+          <ul role="list" class="grade-relacionadas">
+            {conexoes.map((c) => (
+              <li>
+                <a href={`/pesquisadoras/${c.slug}`} class="item-relacionada">
+                  <div class="topo-rel">
+                    {c.foto && (
+                      <img
+                        src={miniatura(c) ?? c.foto}
+                        alt=""
+                        width="44"
+                        height="55"
+                        loading="lazy"
+                        class="foto-rel"
+                      />
+                    )}
+                    <div class="id-rel">
+                      <span class="nome-rel">{c.nomeCurto}</span>
+                      <span class="meta">
+                        <span class="mono">{c.instituicaoSigla}</span> · {c.uf ?? c.estadoOuPais}
+                      </span>
+                    </div>
+                  </div>
+                  <span class="resumo-rel">{c.resumoCurto}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <!-- Navegação entre perfis no desktop -->
+    <nav class="wrap nav-perfis-desktop no-print" aria-label="Navegação entre pesquisadoras">
+      <a href={`/pesquisadoras/${anterior.slug}`} class="nav-elo">
+        <span class="meta">Anterior</span>
+        <span class="nav-elo-nome">{anterior.nomeCurto}</span>
+      </a>
+
+      <a href="/#mural" class="botao-contorno">
+        Ver todas ({total})
+      </a>
+
+      <a href={`/pesquisadoras/${proxima.slug}`} class="nav-elo nav-elo-dir">
+        <span class="meta">Próxima</span>
+        <span class="nav-elo-nome">{proxima.nomeCurto}</span>
+      </a>
+    </nav>
+  </article>
+
+  <!-- Barra inferior no celular -->
+  <nav class="barra-polegar no-print" aria-label="Navegação rápida entre perfis">
+    <a href={`/pesquisadoras/${anterior.slug}`} class="polegar-item">
+      <span class="polegar-rotulo">Anterior</span>
+      <span class="polegar-nome">{anterior.nomeCurto}</span>
+    </a>
+
+    <a href="/#mural" class="polegar-item polegar-mural">
+      <span class="polegar-rotulo">Todas</span>
+      <span class="mono polegar-pos">{indice}/{total}</span>
+    </a>
+
+    <a href={`/pesquisadoras/${proxima.slug}`} class="polegar-item polegar-dir">
+      <span class="polegar-rotulo">Próxima</span>
+      <span class="polegar-nome">{proxima.nomeCurto}</span>
+    </a>
+  </nav>
+</BaseLayout>
+
+<script>
+  import { baixarQrPng, baixarQrSvg, gerarQrSvg } from '../../lib/qrcode';
+
+  const blocoQr = document.getElementById('bloco-qr-perfil');
+  const quadroQr = document.getElementById('qr-perfil-quadro');
+  const btnCompartilhar = document.getElementById('btn-compartilhar-nativo') as HTMLButtonElement | null;
+  const btnCopiar = document.getElementById('btn-copiar-link') as HTMLButtonElement | null;
+  const btnBaixarSvg = document.getElementById('btn-baixar-qr-svg') as HTMLButtonElement | null;
+  const btnBaixarPng = document.getElementById('btn-baixar-qr-png') as HTMLButtonElement | null;
+
+  const slug = blocoQr?.dataset.slug ?? '';
+  const nome = blocoQr?.dataset.nome ?? document.title;
+  const resumo = blocoQr?.dataset.resumo ?? '';
+  const urlBuild = blocoQr?.dataset.urlBuild ?? '';
+  const urlPerfil = slug ? `${window.location.origin}/pesquisadoras/${slug}` : window.location.href;
+
+  function feedbackBotao(btn: HTMLButtonElement | null, msg: string, ms = 1600) {
+    if (!btn) return;
+    if (!btn.dataset.rotuloOrig) {
+      btn.dataset.rotuloOrig = btn.textContent?.trim() ?? '';
+    }
+    const anterior = Number(btn.dataset.timerId ?? 0);
+    if (anterior) window.clearTimeout(anterior);
+    btn.textContent = msg;
+    const novoTimer = window.setTimeout(() => {
+      btn.textContent = btn.dataset.rotuloOrig ?? '';
+      delete btn.dataset.timerId;
+    }, ms);
+    btn.dataset.timerId = String(novoTimer);
+  }
+
+  // Atualiza o QR exibido na ficha se o site estiver em domínio diferente do build
+  if (
+    quadroQr &&
+    urlBuild.includes('localhost:4321') &&
+    window.location.origin &&
+    !window.location.origin.includes('localhost:4321')
+  ) {
+    gerarQrSvg(urlPerfil, { tinta: '#43318C', fundo: '#FFFFFF', margem: 1 }).then((svg) => {
+      quadroQr.innerHTML = svg;
+    });
+  }
+
+  if (btnCompartilhar && typeof navigator.share === 'function') {
+    btnCompartilhar.hidden = false;
+    btnCompartilhar.addEventListener('click', async () => {
+      try {
+        await navigator.share({
+          title: `${nome} · Ciência Delas`,
+          text: resumo || `Conheça a trajetória de ${nome} no projeto Ciência Delas (SNCT 2026).`,
+          url: window.location.href,
+        });
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          feedbackBotao(btnCopiar, 'Link copiado');
+        } catch {
+          feedbackBotao(btnCompartilhar, 'Use Copiar link');
+        }
+      }
+    });
+  }
+
+  btnCopiar?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      feedbackBotao(btnCopiar, 'Link copiado');
+    } catch {
+      feedbackBotao(btnCopiar, 'Copie pela barra do navegador', 2200);
+    }
+  });
+
+  btnBaixarSvg?.addEventListener('click', async () => {
+    await baixarQrSvg(urlPerfil, `qr-${slug || 'perfil'}.svg`);
+    feedbackBotao(btnBaixarSvg, 'SVG pronto', 1400);
+  });
+
+  btnBaixarPng?.addEventListener('click', async () => {
+    await baixarQrPng(urlPerfil, `qr-${slug || 'perfil'}.png`);
+    feedbackBotao(btnBaixarPng, 'PNG pronto', 1400);
+  });
+</script>
+
+<style>
+  .escopo-nordeste {
+    --cor-escopo: var(--magenta);
+  }
+  .escopo-brasil {
+    --cor-escopo: var(--lima);
+  }
+  .escopo-internacional {
+    --cor-escopo: var(--ciano);
+  }
+
+  .faixa-topo-perfil {
+    background: var(--bg-lavanda);
+    border-bottom: 1px solid var(--borda);
+    padding-block: clamp(1.15rem, 0.85rem + 1.5vw, 2.25rem);
+  }
+
+  .trilha-perfil {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .grade-topo {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.15rem;
+    align-items: start;
+  }
+
+  @media (min-width: 520px) {
+    .grade-topo {
+      grid-template-columns: 1fr 165px;
+      column-gap: 1.5rem;
+    }
+  }
+
+  @media (min-width: 860px) {
+    .grade-topo {
+      grid-template-columns: 8fr 4fr;
+      column-gap: var(--gutter);
+    }
+  }
+
+  .topo-retrato {
+    max-width: 175px;
+  }
+
+  @media (min-width: 860px) {
+    .topo-retrato {
+      max-width: 235px;
+      justify-self: end;
+      width: 100%;
+    }
+  }
+
+  .topo-texto h1 {
+    font-size: clamp(1.75rem, 1.4rem + 2vw, 2.75rem);
+    font-weight: 800;
+    color: var(--violeta);
+  }
+
+  .topo-texto h1::after {
+    content: '';
+    display: block;
+    width: 3rem;
+    height: 3px;
+    background: var(--cor-escopo, var(--laranja));
+    border-radius: 2px;
+    margin-block: 0.55rem 0.75rem;
+  }
+
+  .abertura-pratica {
+    font-size: clamp(1.04rem, 0.98rem + 0.35vw, 1.22rem);
+    font-weight: 500;
+    line-height: 1.48;
+    color: var(--ink);
+    max-width: 54ch;
+  }
+
+  /* Corpo */
+  .grade-corpo {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding-block: clamp(1.5rem, 1.1rem + 2vw, 2.75rem);
+  }
+
+  @media (min-width: 860px) {
+    .grade-corpo {
+      grid-template-columns: 7fr 5fr;
+      column-gap: clamp(1.75rem, 1rem + 2.5vw, 3.25rem);
+      align-items: start;
+    }
+  }
+
+  .referencia-linha {
+    margin-top: 2rem;
+    padding-top: 1.15rem;
+    border-top: 1px solid var(--borda);
+  }
+
+  .lista-marcos-linha {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .lista-marcos-linha li {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.65rem;
+    font-size: var(--t-sm);
+    align-items: baseline;
+  }
+
+  .ano-ref {
+    font-size: var(--t-xs);
+    font-weight: 500;
+    color: var(--magenta);
+  }
+
+  /* Ficha lateral */
+  .coluna-ficha {
+    padding: 1.2rem;
+    border: 1px solid var(--borda);
+    border-radius: var(--radius);
+    background: var(--bg-lavanda);
+  }
+
+  .rotulo-ficha {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--t-sm);
+    color: var(--violeta);
+    margin-bottom: 0.5rem;
+  }
+
+  .ficha-dl > div {
+    display: grid;
+    grid-template-columns: 6rem 1fr;
+    gap: 0.75rem;
+    padding-block: 0.52rem;
+    border-bottom: 1px solid var(--borda);
+    font-size: var(--t-sm);
+  }
+
+  .ficha-dl > div:first-child {
+    padding-top: 0;
+  }
+
+  .ficha-dl dt {
+    color: var(--ink-2);
+    font-size: var(--t-xs);
+    font-weight: 500;
+    padding-top: 0.1rem;
+  }
+
+  .ficha-dl dd {
+    margin: 0;
+  }
+
+  .secao-ficha {
+    margin-top: 1.35rem;
+  }
+
+  .lista-marcos {
+    border-top: 1px solid var(--borda);
+  }
+
+  .lista-marcos li {
+    padding-block: 0.48rem;
+    border-bottom: 1px solid var(--borda);
+    font-size: var(--t-sm);
+    color: var(--ink);
+  }
+
+  .lista-marcos li:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .bloco-qr {
+    margin-top: 1.1rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--borda);
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 0.85rem;
+    align-items: center;
+  }
+
+  .qr-quadro {
+    width: 72px;
+    height: 72px;
+    background: #ffffff;
+    border: 1px solid var(--borda-forte);
+    border-radius: 4px;
+    padding: 4px;
+  }
+
+  .qr-quadro :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .rotulo-qr {
+    font-size: var(--t-sm);
+    font-weight: 600;
+    color: var(--violeta);
+    margin-bottom: 0.35rem;
+  }
+
+  .qr-dados {
+    min-width: 0;
+  }
+
+  .qr-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.85rem;
+    align-items: baseline;
+  }
+
+  .qr-downloads {
+    margin-top: 0.4rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .qr-downloads .meta {
+    margin-right: 0.1rem;
+  }
+
+  .qr-links .botao-texto[hidden] {
+    display: none;
+  }
+
+  /* Leia também */
+  .secao-relacionadas {
+    padding-block: 1.75rem 0.5rem;
+    border-top: 1px solid var(--borda);
+  }
+
+  .filete-magenta {
+    --cor-filete: var(--magenta);
+    font-size: var(--t-lg);
+  }
+
+  .grade-relacionadas {
+    margin-top: 1.15rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+
+  @media (min-width: 640px) {
+    .grade-relacionadas {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1020px) {
+    .grade-relacionadas {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .item-relacionada {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    height: 100%;
+    padding: 0.95rem 1rem;
+    border: 1px solid var(--borda);
+    border-radius: var(--radius);
+    background: var(--bg-lavanda);
+    text-decoration: none;
+    color: var(--ink);
+    transition: border-color 140ms var(--ease);
+  }
+
+  .topo-rel {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .foto-rel {
+    flex: none;
+    width: 2.75rem;
+    height: 3.4375rem;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--borda-forte);
+    background: #ffffff;
+  }
+
+  .id-rel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+  }
+
+  .item-relacionada:hover {
+    border-color: var(--magenta);
+    color: var(--ink);
+  }
+
+  .nome-rel {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--violeta);
+  }
+
+  .item-relacionada:hover .nome-rel {
+    color: var(--magenta);
+  }
+
+  .resumo-rel {
+    font-size: var(--t-xs);
+    color: var(--ink-2);
+    line-height: 1.48;
+    margin-top: 0.15rem;
+  }
+
+  /* Navegação Desktop */
+  .nav-perfis-desktop {
+    display: none;
+    margin-block: 2rem 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--borda);
+  }
+
+  @media (min-width: 900px) {
+    .nav-perfis-desktop {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+    }
+  }
+
+  .nav-elo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    text-decoration: none;
+  }
+
+  .nav-elo-dir {
+    text-align: right;
+    align-items: flex-end;
+  }
+
+  .nav-elo-nome {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: 1.08rem;
+    color: var(--violeta);
+  }
+
+  .nav-elo:hover .nav-elo-nome {
+    color: var(--magenta);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+
+  /* Barra inferior mobile */
+  .barra-polegar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    background: var(--violeta);
+    color: #ffffff;
+    border-top: 1px solid var(--violeta-escuro);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (min-width: 900px) {
+    .barra-polegar {
+      display: none;
+    }
+  }
+
+  .polegar-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.12rem;
+    min-height: 3.65rem;
+    padding: 0.5rem 0.75rem 0.6rem;
+    text-decoration: none;
+    color: #ffffff;
+    line-height: 1.2;
+    overflow: hidden;
+  }
+  .polegar-item:hover {
+    background: var(--violeta-escuro);
+    color: #ffffff;
+  }
+
+  .polegar-mural {
+    align-items: center;
+    padding-inline: 0.9rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    white-space: nowrap;
+  }
+
+  .polegar-dir {
+    text-align: right;
+    align-items: flex-end;
+  }
+
+  .polegar-rotulo {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .polegar-nome {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .polegar-pos {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--amarelo);
+  }
+</style>

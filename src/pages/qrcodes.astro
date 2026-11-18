@@ -1,0 +1,374 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { miniatura, pesquisadoras } from '../data/pesquisadoras';
+import { gerarQrSvg } from '../lib/qrcode';
+
+const sitePadrao = (Astro.site ?? new URL('http://localhost:4321')).origin;
+
+const fichas = await Promise.all(
+  pesquisadoras.map(async (p) => {
+    const url = `${sitePadrao}/pesquisadoras/${p.slug}`;
+    const svg = await gerarQrSvg(url, { tinta: '#181615', fundo: '#FFFFFF', margem: 1 });
+    return { p, url, svg };
+  })
+);
+
+const qtdNordeste = pesquisadoras.filter((p) => p.escopo === 'nordeste').length;
+const qtdBrasil = pesquisadoras.filter((p) => p.escopo === 'brasil').length;
+const qtdInt = pesquisadoras.filter((p) => p.escopo === 'internacional').length;
+---
+
+<BaseLayout
+  titulo="QR Codes · Ciência Delas"
+  descricao="QR Codes individuais de cada perfil do projeto Ciência Delas."
+>
+  <header class="faixa-cabecalho-qr no-print">
+    <div class="wrap">
+      <div class="topo-qr">
+        <div>
+          <h1 class="titulo-secao filete-magenta">QR Codes dos perfis</h1>
+          <p class="intro-qr">
+            Se o site já tiver endereço final na internet, atualize o link abaixo antes de imprimir.
+          </p>
+        </div>
+
+        <form class="form-dominio" id="form-dominio">
+          <label for="input-dominio" class="meta">Endereço publicado do site</label>
+          <div class="controles-dominio">
+            <input
+              id="input-dominio"
+              name="dominio"
+              type="url"
+              value={sitePadrao}
+              placeholder="https://cienciadelas.exemplo.br"
+              required
+              class="campo mono campo-url"
+            />
+            <button type="submit" class="botao-contorno btn-atualizar">Atualizar links</button>
+            <button type="button" class="botao-acao" id="btn-imprimir">
+              Imprimir
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="abas abas-sem-borda" role="group" aria-label="Filtrar perfis">
+        <button type="button" class="aba" data-filtro-qr="todas" aria-pressed="true">
+          Todas <span class="qtd">{pesquisadoras.length}</span>
+        </button>
+        <button type="button" class="aba" data-filtro-qr="nordeste" aria-pressed="false">
+          Nordeste <span class="qtd">{qtdNordeste}</span>
+        </button>
+        <button type="button" class="aba" data-filtro-qr="brasil" aria-pressed="false">
+          Outras regiões <span class="qtd">{qtdBrasil}</span>
+        </button>
+        <button type="button" class="aba" data-filtro-qr="internacional" aria-pressed="false">
+          Pioneiras mundiais <span class="qtd">{qtdInt}</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <section class="wrap secao-folha" aria-label="Etiquetas com QR Code">
+    <ul role="list" class="grade-etiquetas">
+      {
+        fichas.map(({ p, url, svg }) => (
+          <li
+            id={`qr-${p.slug}`}
+            class="etiqueta"
+            data-escopo={p.escopo}
+            data-slug={p.slug}
+          >
+            <div class="etiqueta-codigo" data-qr-box set:html={svg} />
+
+            {p.foto && (
+              <img
+                src={miniatura(p) ?? p.foto}
+                alt=""
+                width="52"
+                height="65"
+                class="etiqueta-foto"
+              />
+            )}
+
+            <div class="etiqueta-dados">
+              <h2 class="etiqueta-nome">
+                <a href={`/pesquisadoras/${p.slug}`}>{p.nomeCurto}</a>
+              </h2>
+              <p class="etiqueta-vinculo">
+                <span class="mono">{p.instituicaoSigla}</span> · {p.uf ?? p.estadoOuPais}
+              </p>
+              <p class="etiqueta-resumo">{p.resumoCurto}</p>
+              <p class="mono etiqueta-url" data-qr-url>{url}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</BaseLayout>
+
+<script>
+  import { gerarQrSvg } from '../lib/qrcode';
+
+  const form = document.getElementById('form-dominio') as HTMLFormElement | null;
+  const input = document.getElementById('input-dominio') as HTMLInputElement | null;
+  const btnImprimir = document.getElementById('btn-imprimir');
+  const botoesFiltro = document.querySelectorAll<HTMLButtonElement>('[data-filtro-qr]');
+  const etiquetas = document.querySelectorAll<HTMLLIElement>('.etiqueta');
+
+  async function regenerarDominio(novaOrigem: string) {
+    const baseLimpa = novaOrigem.replace(/\/+$/, '');
+    for (const item of etiquetas) {
+      const slug = item.dataset.slug;
+      if (!slug) continue;
+      const destino = `${baseLimpa}/pesquisadoras/${slug}`;
+      const box = item.querySelector<HTMLElement>('[data-qr-box]');
+      const labelUrl = item.querySelector<HTMLElement>('[data-qr-url]');
+      if (box) {
+        box.innerHTML = await gerarQrSvg(destino, { tinta: '#181615', fundo: '#FFFFFF', margem: 1 });
+      }
+      if (labelUrl) {
+        labelUrl.textContent = destino;
+      }
+    }
+  }
+
+  if (
+    input &&
+    window.location.origin &&
+    input.value.includes('localhost:4321') &&
+    !window.location.origin.includes('localhost:4321')
+  ) {
+    input.value = window.location.origin;
+    regenerarDominio(window.location.origin);
+  }
+
+  form?.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (!input?.value) return;
+    await regenerarDominio(input.value.trim());
+  });
+
+  btnImprimir?.addEventListener('click', () => {
+    window.print();
+  });
+
+  botoesFiltro.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filtro = btn.dataset.filtroQr ?? 'todas';
+      botoesFiltro.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+
+      etiquetas.forEach((card) => {
+        const bate = filtro === 'todas' || card.dataset.escopo === filtro;
+        card.hidden = !bate;
+      });
+    });
+  });
+</script>
+
+<style>
+  .faixa-cabecalho-qr {
+    background: var(--bg-lavanda);
+    border-bottom: 1px solid var(--borda);
+    padding-top: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  }
+
+  .filete-magenta {
+    --cor-filete: var(--magenta);
+    font-size: var(--t-2xl);
+  }
+
+  .topo-qr {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    padding-bottom: 1.15rem;
+  }
+
+  @media (min-width: 920px) {
+    .topo-qr {
+      grid-template-columns: 6fr 6fr;
+      column-gap: var(--gutter);
+      align-items: end;
+    }
+  }
+
+  .intro-qr {
+    color: var(--ink-2);
+    max-width: 50ch;
+    margin-top: 0.7rem;
+  }
+
+  .form-dominio {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .controles-dominio {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: center;
+  }
+
+  .campo-url {
+    flex: 1 1 12rem;
+    min-width: 0;
+  }
+
+  .btn-atualizar {
+    height: 2.4rem;
+  }
+
+  .abas-sem-borda {
+    border-bottom: 0;
+  }
+
+  .secao-folha {
+    padding-block: 1.5rem 2.5rem;
+  }
+
+  .grade-etiquetas {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+
+  @media (min-width: 760px) {
+    .grade-etiquetas {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .etiqueta {
+    display: grid;
+    grid-template-columns: 88px 52px 1fr;
+    gap: 0.8rem;
+    padding: 0.9rem;
+    border: 1px solid var(--borda);
+    border-top: 3px solid var(--violeta);
+    border-radius: var(--radius);
+    background: #ffffff;
+    align-items: center;
+  }
+
+  .etiqueta[hidden] {
+    display: none !important;
+  }
+
+  .etiqueta-codigo {
+    width: 88px;
+    height: 88px;
+    background: #ffffff;
+    border: 1px solid var(--borda-forte);
+    border-radius: 4px;
+    padding: 4px;
+  }
+
+  .etiqueta-foto {
+    width: 52px;
+    height: 65px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--borda-forte);
+    background: var(--bg-lavanda);
+  }
+
+  .etiqueta-codigo :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .etiqueta-dados {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
+  }
+
+  .etiqueta-nome {
+    font-size: 1.08rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .etiqueta-nome a {
+    text-decoration: none;
+    color: var(--violeta);
+  }
+  .etiqueta-nome a:hover {
+    color: var(--magenta);
+    text-decoration: underline;
+  }
+
+  .etiqueta-vinculo {
+    font-size: var(--t-xs);
+    color: var(--magenta);
+    font-weight: 500;
+  }
+
+  .etiqueta-resumo {
+    font-size: var(--t-xs);
+    color: var(--ink);
+    line-height: 1.42;
+  }
+
+  .etiqueta-url {
+    font-size: var(--t-xs);
+    color: var(--ink-2);
+    word-break: break-all;
+    margin-top: 0.15rem;
+  }
+
+  @media print {
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+
+    body {
+      background: #ffffff !important;
+      color: #000000 !important;
+    }
+
+    .wrap {
+      max-width: none;
+      padding: 0;
+    }
+
+    .secao-folha {
+      padding-block: 0;
+    }
+
+    .grade-etiquetas {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5mm;
+    }
+
+    .etiqueta {
+      grid-template-columns: 24mm 15mm 1fr;
+      gap: 3.5mm;
+      padding: 3.5mm;
+      border: 1px dashed #181615;
+      border-radius: 0;
+      background: #ffffff;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .etiqueta-codigo {
+      width: 24mm;
+      height: 24mm;
+      border-color: #181615;
+      padding: 1mm;
+    }
+
+    .etiqueta-foto {
+      width: 15mm;
+      height: 18.75mm;
+      border-color: #181615;
+    }
+  }
+</style>

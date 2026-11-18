@@ -1,0 +1,418 @@
+---
+import type { UF } from '../data/taxonomia';
+import {
+  ESTADOS_MAPA,
+  MAPA_CONTORNO_EXTERNO,
+  MAPA_DIVISAS_INTERNAS,
+  MAPA_VIEWBOX,
+} from '../data/mapa-brasil';
+
+interface Props {
+  contagemUF: Partial<Record<UF, number>>;
+}
+
+const { contagemUF } = Astro.props;
+
+const estados = ESTADOS_MAPA.map((st) => ({
+  ...st,
+  qtd: contagemUF[st.sigla] ?? 0,
+}));
+
+const inativos = estados.filter((st) => st.qtd === 0);
+const ativos = estados.filter((st) => st.qtd > 0);
+
+const BOX_W = 46;
+const BOX_H = 19;
+const SPLIT_W = 26;
+---
+
+<div class="moldura-mapa">
+  <svg
+    class="svg-mapa-brasil"
+    viewBox={MAPA_VIEWBOX}
+    shape-rendering="geometricPrecision"
+    text-rendering="geometricPrecision"
+    role="group"
+    aria-label="Mapa do Brasil dividido por estados com número de pesquisadoras"
+  >
+    <!-- 1. Estados sem pesquisadoras listadas -->
+    <g class="camada-inativos" aria-hidden="true">
+      {inativos.map((st) => <path d={st.pathD} fill-rule="evenodd" class="poligono-inativo" />)}
+    </g>
+
+    <!-- 2. Estados ativos clicáveis -->
+    <g class="camada-ativos">
+      {
+        ativos.map((st) => (
+          <g
+            class:list={['alvo-uf', 'poligono-uf', st.ehNe ? 'uf-mapa-ne' : 'uf-mapa-br']}
+            data-uf={st.sigla}
+            role="button"
+            tabindex="0"
+            aria-pressed="false"
+            aria-label={`${st.nome} (${st.sigla}): ${st.qtd} ${st.qtd === 1 ? 'pesquisadora' : 'pesquisadoras'}`}
+          >
+            <title>{`${st.nome}: ${st.qtd} ${st.qtd === 1 ? 'pesquisadora' : 'pesquisadoras'}`}</title>
+            <path d={st.pathD} fill-rule="evenodd" />
+          </g>
+        ))
+      }
+    </g>
+
+    <!-- 3. Divisas estaduais nítidas e contorno do Brasil em Violeta Profundo -->
+    <g class="camada-linhas" aria-hidden="true">
+      <path d={MAPA_DIVISAS_INTERNAS} class="divisas-estaduais" />
+      <path d={MAPA_CONTORNO_EXTERNO} class="contorno-brasil" />
+    </g>
+
+    <!-- 4. Siglas discretas dos estados sem contagem -->
+    <g class="camada-siglas-mudas" aria-hidden="true">
+      {
+        inativos.map((st) => (
+          <text
+            x={st.labelPos.x}
+            y={st.labelPos.y}
+            dy="0.35em"
+            text-anchor="middle"
+            class:list={['sigla-muda', st.sigla === 'ES' && 'sigla-muda-pequena']}
+          >
+            {st.sigla}
+          </text>
+        ))
+      }
+    </g>
+
+    <!-- 5. Siglas + contagens internas e chamadas técnicas alinhadas -->
+    <g class="camada-numeros">
+      {
+        ativos.map((st) => {
+          if (st.callout) {
+            const co = st.callout;
+            const boxX = co.side === 'left' ? co.bx - BOX_W : co.bx;
+            const boxY = co.by - BOX_H / 2;
+            return (
+              <g
+                class:list={['alvo-uf', 'chamada-uf', st.ehNe ? 'uf-mapa-ne' : 'uf-mapa-br']}
+                data-uf={st.sigla}
+                aria-hidden="true"
+              >
+                <title>{`${st.nome}: ${st.qtd} ${st.qtd === 1 ? 'pesquisadora' : 'pesquisadoras'}`}</title>
+                <path
+                  d={`M${co.ax},${co.ay} C${((co.ax + co.ex) / 2).toFixed(1)},${co.ay} ${co.ex},${co.by} ${co.bx},${co.by}`}
+                  class="linha-chamada"
+                />
+                <circle cx={co.ax} cy={co.ay} r="2.35" class="ponto-chamada" />
+                <rect
+                  x={boxX}
+                  y={boxY}
+                  width={BOX_W}
+                  height={BOX_H}
+                  rx="5.5"
+                  class="caixa-chamada"
+                />
+                <line
+                  x1={boxX + SPLIT_W}
+                  y1={boxY + 3}
+                  x2={boxX + SPLIT_W}
+                  y2={boxY + BOX_H - 3}
+                  class="divisor-chamada"
+                />
+                <text
+                  x={boxX + SPLIT_W / 2}
+                  y={co.by}
+                  dy="0.35em"
+                  text-anchor="middle"
+                  class="texto-sigla-chamada"
+                >
+                  {st.sigla}
+                </text>
+                <text
+                  x={boxX + SPLIT_W + (BOX_W - SPLIT_W) / 2}
+                  y={co.by}
+                  dy="0.36em"
+                  text-anchor="middle"
+                  class="texto-num-chamada"
+                >
+                  {st.qtd}
+                </text>
+              </g>
+            );
+          }
+
+          return (
+            <g
+              class:list={['rotulo-interno-uf', st.ehNe ? 'uf-mapa-ne' : 'uf-mapa-br']}
+              data-uf={st.sigla}
+              aria-hidden="true"
+            >
+              <text
+                x={st.labelPos.x}
+                y={st.labelPos.y - 4.5}
+                dy="0.35em"
+                text-anchor="middle"
+                class="sigla-interna"
+              >
+                {st.sigla}
+              </text>
+              <text
+                x={st.labelPos.x}
+                y={st.labelPos.y + 6.5}
+                dy="0.35em"
+                text-anchor="middle"
+                class="num-interno"
+              >
+                {st.qtd}
+              </text>
+            </g>
+          );
+        })
+      }
+    </g>
+  </svg>
+</div>
+
+<script>
+  const svgMapa = document.querySelector('.svg-mapa-brasil');
+  if (svgMapa) {
+    const todosGruposUf = svgMapa.querySelectorAll<SVGGElement>('[data-uf]');
+
+    const destacarUf = (sigla: string | null) => {
+      todosGruposUf.forEach((el) => {
+        el.toggleAttribute('data-hover', Boolean(sigla && el.dataset.uf === sigla));
+      });
+    };
+
+    svgMapa.querySelectorAll<SVGGElement>('.alvo-uf').forEach((alvo) => {
+      alvo.addEventListener('pointerenter', () => destacarUf(alvo.dataset.uf ?? null));
+      alvo.addEventListener('pointerleave', () => destacarUf(null));
+      alvo.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          alvo.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        }
+      });
+    });
+  }
+</script>
+
+<style>
+  .moldura-mapa {
+    width: 100%;
+    max-width: 390px;
+    margin-inline: auto;
+  }
+
+  .svg-mapa-brasil {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+    user-select: none;
+  }
+
+  .poligono-inativo {
+    fill: #ffffff;
+  }
+
+  .poligono-uf {
+    cursor: pointer;
+    outline: none;
+  }
+
+  .poligono-uf path {
+    transition: fill 140ms var(--ease);
+  }
+
+  .uf-mapa-ne.poligono-uf path {
+    fill: #fceef6;
+  }
+
+  .uf-mapa-br.poligono-uf path {
+    fill: #f1effa;
+  }
+
+  .poligono-uf[data-hover] path,
+  .poligono-uf:focus-visible path {
+    fill: #ddd6f3;
+  }
+
+  .uf-mapa-ne.poligono-uf[data-hover] path,
+  .uf-mapa-ne.poligono-uf:focus-visible path {
+    fill: #f7d0e8;
+  }
+
+  .poligono-uf[aria-pressed='true'] path {
+    fill: var(--violeta) !important;
+  }
+
+  .poligono-uf:focus-visible path {
+    stroke: var(--ciano);
+    stroke-width: 2px;
+  }
+
+  /* Divisas cartográficas nítidas em Violeta Profundo */
+  .camada-linhas {
+    pointer-events: none;
+  }
+
+  .divisas-estaduais {
+    fill: none;
+    stroke: var(--violeta);
+    stroke-width: 0.95;
+    stroke-opacity: 0.65;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  .contorno-brasil {
+    fill: none;
+    stroke: var(--violeta);
+    stroke-width: 1.65;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  /* Siglas discretas (estados sem perfis) */
+  .camada-siglas-mudas {
+    pointer-events: none;
+  }
+
+  .sigla-muda {
+    font-family: var(--f-sans);
+    font-size: 8.4px;
+    font-weight: 600;
+    fill: var(--violeta);
+    opacity: 0.38;
+  }
+
+  .sigla-muda-pequena {
+    font-size: 7.4px;
+  }
+
+  /* Siglas e números internos centralizados */
+  .rotulo-interno-uf {
+    pointer-events: none;
+  }
+
+  .sigla-interna {
+    font-family: var(--f-sans);
+    font-size: 8.8px;
+    font-weight: 700;
+    fill: var(--violeta);
+    transition: fill 140ms var(--ease);
+  }
+
+  .num-interno {
+    font-family: var(--f-mono);
+    font-size: 11.8px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    fill: var(--violeta);
+    transition: fill 140ms var(--ease);
+  }
+
+  .uf-mapa-ne .num-interno {
+    fill: var(--magenta);
+  }
+
+  .rotulo-interno-uf[aria-pressed='true'] .sigla-interna {
+    fill: #ffffff;
+  }
+
+  .rotulo-interno-uf[aria-pressed='true'] .num-interno {
+    fill: var(--amarelo);
+  }
+
+  /* Chamadas técnicas alinhadas em coluna única */
+  .chamada-uf {
+    cursor: pointer;
+  }
+
+  .linha-chamada {
+    fill: none;
+    stroke: var(--violeta);
+    stroke-width: 1.05;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    pointer-events: none;
+  }
+
+  .ponto-chamada {
+    fill: var(--violeta);
+    stroke: #ffffff;
+    stroke-width: 0.7;
+    pointer-events: none;
+  }
+
+  .uf-mapa-ne .ponto-chamada {
+    fill: var(--magenta);
+  }
+
+  .caixa-chamada {
+    fill: #ffffff;
+    stroke: var(--violeta);
+    stroke-width: 1.15;
+    transition: fill 140ms var(--ease), stroke 140ms var(--ease);
+  }
+
+  .uf-mapa-ne .caixa-chamada {
+    stroke: var(--magenta);
+  }
+
+  .divisor-chamada {
+    stroke: var(--borda);
+    stroke-width: 1;
+    pointer-events: none;
+  }
+
+  .chamada-uf[data-hover] .caixa-chamada {
+    fill: var(--bg-lavanda);
+  }
+
+  .uf-mapa-ne.chamada-uf[data-hover] .caixa-chamada {
+    fill: #fceef6;
+  }
+
+  .texto-sigla-chamada {
+    font-family: var(--f-sans);
+    font-size: 9.4px;
+    font-weight: 700;
+    fill: var(--violeta);
+    pointer-events: none;
+  }
+
+  .texto-num-chamada {
+    font-family: var(--f-mono);
+    font-size: 10.2px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    fill: var(--violeta);
+    pointer-events: none;
+  }
+
+  .uf-mapa-ne .texto-num-chamada {
+    fill: var(--magenta);
+  }
+
+  .chamada-uf[aria-pressed='true'] .caixa-chamada {
+    fill: var(--violeta) !important;
+    stroke: var(--violeta) !important;
+  }
+
+  .chamada-uf[aria-pressed='true'] .divisor-chamada {
+    stroke: rgba(255, 255, 255, 0.25) !important;
+  }
+
+  .chamada-uf[aria-pressed='true'] .texto-sigla-chamada {
+    fill: #ffffff !important;
+  }
+
+  .chamada-uf[aria-pressed='true'] .texto-num-chamada {
+    fill: var(--amarelo) !important;
+  }
+
+  .chamada-uf[aria-pressed='true'] .ponto-chamada {
+    fill: var(--amarelo) !important;
+    stroke: var(--violeta) !important;
+  }
+</style>

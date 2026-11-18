@@ -1,0 +1,32 @@
+{
+  "name": "Ciência Delas · 23ª SNCT 2026",
+  "short_name": "Ciência Delas",
+  "description": "87 mulheres que ajudaram a criar a computação e fazem ciência no Nordeste e em todo o Brasil. Projeto do curso de TADS · IFPI Campus Floriano.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "theme_color": "#43318C",
+  "background_color": "#43318C",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/marcas/ciencia-delas-app-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/marcas/ciencia-delas-app-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
