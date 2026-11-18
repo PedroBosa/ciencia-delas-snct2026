@@ -819,7 +819,7 @@ const todasFotosMosaico = Array.from(
     }
   });
 
-  // Rotação 3D fluida e sem repetição no mosaico do Hero
+  // Rotação 3D simultânea no mosaico do Hero, evitando células próximas
   const secaoHero = document.getElementById('secao-hero');
   const mosaicoEl = document.getElementById('mosaico-hero');
 
@@ -828,6 +828,7 @@ const todasFotosMosaico = Array.from(
     const cartoes = Array.from(mosaicoEl.querySelectorAll<HTMLElement>('.cartao-mosaico'));
 
     if (cartoes.length > 0 && todasFotos.length > cartoes.length) {
+      const mqDesktop = window.matchMedia('(min-width: 760px)');
       const passos = new Array<number>(cartoes.length).fill(0);
       const girando = new Set<number>();
       const historicoRecente: number[] = [];
@@ -847,34 +848,54 @@ const todasFotosMosaico = Array.from(
       let timerProximo = 0;
 
       const coordenadasSlot = (idx: number) => {
-        const colunas = window.innerWidth >= 760 ? 6 : 4;
-        return { col: idx % colunas, lin: Math.floor(idx / colunas), colunas };
+        const colunas = mqDesktop.matches ? 6 : 4;
+        return { col: idx % colunas, lin: Math.floor(idx / colunas) };
       };
 
-      const escolherSlot = (): number => {
-        const candidatos: number[] = [];
-        for (let i = 0; i < cartoes.length; i++) {
-          if (girando.has(i) || historicoRecente.includes(i)) continue;
-          const { col } = coordenadasSlot(i);
-          // Prioriza colunas onde o degradê revela melhor o mosaico
-          if (col === 0) continue;
+      const estaProximo = (a: number, b: number, distManhattanMin: number): boolean => {
+        const ca = coordenadasSlot(a);
+        const cb = coordenadasSlot(b);
+        const dx = Math.abs(ca.col - cb.col);
+        const dy = Math.abs(ca.lin - cb.lin);
+        // Bloqueia todos os 8 vizinhos imediatos (horizontal, vertical e diagonal)
+        if (Math.max(dx, dy) <= 1) return true;
+        return dx + dy < distManhattanMin;
+      };
 
-          let vizinhoGirando = false;
-          for (const g of girando) {
-            const cg = coordenadasSlot(g);
-            if (Math.abs(cg.col - col) + Math.abs(cg.lin - Math.floor(i / cg.colunas)) <= 1) {
-              vizinhoGirando = true;
-              break;
+      const escolherSlot = (extrasBloqueados: number[]): number => {
+        const ehDesktop = mqDesktop.matches;
+        const ativos = new Set<number>([...girando, ...extrasBloqueados]);
+
+        const buscar = (distManhattanMin: number, apenasColsVisiveis: boolean) => {
+          const candidatos: number[] = [];
+          for (let i = 0; i < cartoes.length; i++) {
+            if (ativos.has(i) || historicoRecente.includes(i)) continue;
+            const { col } = coordenadasSlot(i);
+            // Coluna 0 fica quase oculta sob o degradê sólido da esquerda
+            if (col === 0) continue;
+            if (apenasColsVisiveis && ehDesktop && col === 1) continue;
+
+            let proximo = false;
+            for (const outro of ativos) {
+              if (estaProximo(i, outro, distManhattanMin)) {
+                proximo = true;
+                break;
+              }
             }
+            if (!proximo) candidatos.push(i);
           }
-          if (!vizinhoGirando) candidatos.push(i);
-        }
+          return candidatos;
+        };
 
+        let candidatos = buscar(3, true);
+        if (candidatos.length === 0) candidatos = buscar(3, false);
+        if (candidatos.length === 0) candidatos = buscar(2, false);
         if (candidatos.length === 0) return -1;
+
         return candidatos[Math.floor(Math.random() * candidatos.length)];
       };
 
-      const virarSlot = async (idx: number) => {
+      const virarSlot = async (idx: number, atrasoMs = 0) => {
         if (idx < 0 || girando.has(idx) || filaReserva.length === 0) return;
 
         const cartao = cartoes[idx];
@@ -884,20 +905,27 @@ const todasFotosMosaico = Array.from(
         girando.add(idx);
         emUso.add(novaFoto);
         historicoRecente.push(idx);
-        if (historicoRecente.length > 9) historicoRecente.shift();
+        while (historicoRecente.length > 6) historicoRecente.shift();
+
+        const esperar =
+          atrasoMs > 0
+            ? new Promise<void>((resolve) => window.setTimeout(resolve, atrasoMs))
+            : Promise.resolve();
 
         const imgOculta = cartao.querySelector<HTMLImageElement>(
           passos[idx] % 2 === 0 ? '.face-verso img' : '.face-frente img'
         );
 
-        if (imgOculta) {
-          imgOculta.src = novaFoto;
-          try {
-            await imgOculta.decode();
-          } catch {
-            // Prossegue mesmo se o navegador já tiver decodificado em cache
-          }
-        }
+        const decodificar = imgOculta
+          ? (() => {
+              imgOculta.src = novaFoto;
+              return imgOculta.decode().catch(() => {
+                // Prossegue mesmo se o navegador já tiver decodificado em cache
+              });
+            })()
+          : Promise.resolve();
+
+        await Promise.all([decodificar, esperar]);
 
         const fotoAntiga = cartao.dataset.fotoAtual ?? '';
         cartao.dataset.fotoAtual = novaFoto;
@@ -915,18 +943,30 @@ const todasFotosMosaico = Array.from(
             filaReserva.splice(cauda, 0, fotoAntiga);
           }
           girando.delete(idx);
-        }, 880);
+        }, 860);
       };
 
-      const agendarCiclo = (atraso = 1350) => {
+      const dispararOnda = () => {
+        const alvo = mqDesktop.matches ? (Math.random() < 0.45 ? 4 : 3) : 2;
+        const faltam = Math.max(0, alvo - girando.size);
+        const escolhidos: number[] = [];
+
+        for (let k = 0; k < faltam; k++) {
+          const idx = escolherSlot(escolhidos);
+          if (idx < 0) break;
+          escolhidos.push(idx);
+          void virarSlot(idx, k * 95);
+        }
+      };
+
+      const agendarCiclo = (atraso = 1150) => {
         window.clearTimeout(timerProximo);
         if (!heroVisivel || document.hidden) return;
 
         timerProximo = window.setTimeout(() => {
           if (heroVisivel && !document.hidden) {
-            const idx = escolherSlot();
-            if (idx >= 0) void virarSlot(idx);
-            agendarCiclo(1250 + Math.floor(Math.random() * 350));
+            dispararOnda();
+            agendarCiclo(1050 + Math.floor(Math.random() * 350));
           }
         }, atraso);
       };
@@ -935,7 +975,7 @@ const todasFotosMosaico = Array.from(
         (entradas) => {
           heroVisivel = Boolean(entradas[0]?.isIntersecting);
           if (heroVisivel && !document.hidden) {
-            agendarCiclo(900);
+            agendarCiclo(400);
           } else {
             window.clearTimeout(timerProximo);
           }
@@ -949,7 +989,7 @@ const todasFotosMosaico = Array.from(
         if (document.hidden) {
           window.clearTimeout(timerProximo);
         } else if (heroVisivel) {
-          agendarCiclo(900);
+          agendarCiclo(450);
         }
       });
     }
@@ -1042,7 +1082,7 @@ const todasFotosMosaico = Array.from(
     width: 100%;
     height: 100%;
     transform-style: preserve-3d;
-    transition: transform 840ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform;
   }
 
