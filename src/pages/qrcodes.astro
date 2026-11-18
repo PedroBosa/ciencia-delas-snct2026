@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { miniatura, pesquisadoras } from '../data/pesquisadoras';
+import { iniciais, miniatura, pesquisadoras } from '../data/pesquisadoras';
 import { gerarQrSvg } from '../lib/qrcode';
 
 const sitePadrao = (Astro.site ?? new URL('http://localhost:4321')).origin;
@@ -81,15 +81,21 @@ const qtdInt = pesquisadoras.filter((p) => p.escopo === 'internacional').length;
           >
             <div class="etiqueta-codigo" data-qr-box set:html={svg} />
 
-            {p.foto && (
-              <img
-                src={miniatura(p) ?? p.foto}
-                alt=""
-                width="52"
-                height="65"
-                class="etiqueta-foto"
-              />
-            )}
+            {
+              p.foto ? (
+                <img
+                  src={miniatura(p) ?? p.foto}
+                  alt=""
+                  width="52"
+                  height="65"
+                  class="etiqueta-foto"
+                />
+              ) : (
+                <span class="etiqueta-foto etiqueta-iniciais" aria-hidden="true">
+                  {iniciais(p)}
+                </span>
+              )
+            }
 
             <div class="etiqueta-dados">
               <h2 class="etiqueta-nome">
@@ -274,6 +280,17 @@ const qtdInt = pesquisadoras.filter((p) => p.escopo === 'internacional').length;
     border-radius: 4px;
     border: 1px solid var(--borda-forte);
     background: var(--bg-lavanda);
+  }
+
+  .etiqueta-iniciais {
+    display: grid;
+    place-items: center;
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: var(--violeta);
+    letter-spacing: -0.02em;
+    user-select: none;
   }
 
   .etiqueta-codigo :global(svg) {

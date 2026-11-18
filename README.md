@@ -6,8 +6,8 @@ Acervo digital e painel interativo da sala temática **Ciência Delas**, desenvo
 
 O projeto reúne exclusivamente trajetórias da área de **Computação e Tecnologia da Informação**, conectando pioneiras internacionais, pesquisadoras brasileiras de destaque e lideranças científicas do Nordeste:
 
-- **87 perfis completos** em `src/data/pesquisadoras.ts`:
-  - **33 pesquisadoras do Nordeste**, cobrindo todos os 9 estados da região (`AL`, `BA`, `CE`, `MA`, `PB`, `PE`, `PI`, `RN`, `SE`);
+- **93 perfis completos** em `src/data/pesquisadoras.ts`:
+  - **39 pesquisadoras do Nordeste**, cobrindo todos os 9 estados da região (`AL`, `BA`, `CE`, `MA`, `PB`, `PE`, `PI`, `RN`, `SE`), incluindo **6 docentes e pesquisadoras atuantes em Floriano-PI**;
   - **30 pesquisadoras e pioneiras de outras regiões do Brasil** (`Norte`, `Centro-Oeste`, `Sudeste` e `Sul`, totalizando 22 unidades da federação com representação no mapa);
   - **24 pioneiras internacionais**, dos primeiros algoritmos do século XIX à pesquisa contemporânea em IA.
 - **Filtros com persistência na URL** (`?escopo=`, `?uf=`, `?area=`, `?busca=`) e cópia direta de links filtrados, preservando o estado ao voltar de um perfil.
@@ -45,7 +45,7 @@ SNCT2026/
 │   │   ├── iniciativas.ts          # Redes e grupos de apoio
 │   │   ├── linha-do-tempo.ts       # 36 marcos históricos
 │   │   ├── mapa-brasil.ts          # Geometrias SVG e rótulos das 27 UFs
-│   │   ├── pesquisadoras.ts        # Catálogo das 87 pesquisadoras e helpers
+│   │   ├── pesquisadoras.ts        # Catálogo das 93 pesquisadoras e helpers
 │   │   └── taxonomia.ts            # Áreas, escopos, regiões e UFs
 │   ├── layouts/
 │   │   └── BaseLayout.astro        # Cabeçalho responsivo, rodapé e UI de navegação
@@ -55,7 +55,7 @@ SNCT2026/
 │   ├── pages/
 │   │   ├── index.astro             # Página inicial (hero, mural, mapa, binário, projetos)
 │   │   ├── linha-do-tempo.astro    # Linha do tempo filtrável (Brasil / Mundo)
-│   │   ├── qrcodes.astro           # Folha de impressão com QR Codes dos 87 perfis
+│   │   ├── qrcodes.astro           # Folha de impressão com QR Codes dos 93 perfis
 │   │   └── pesquisadoras/[slug].astro # Páginas individuais geradas estaticamente
 │   └── styles/
 │       └── global.css              # Tokens da SNCT 2026, tipografia e utilitários
@@ -74,7 +74,7 @@ npm install
 npm run dev
 ```
 
-Para gerar o site estático em `dist/` (87 páginas de perfil + home + linha do tempo + página de QR Codes = `90` páginas HTML):
+Para gerar o site estático em `dist/` (93 páginas de perfil + home + linha do tempo + página de QR Codes = `96` páginas HTML):
 
 ```bash
 npm run build

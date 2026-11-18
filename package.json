@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "Exposição e acervo digital Ciência Delas — 87 mulheres na Computação · 23ª SNCT 2026 (TADS · IFPI Campus Floriano)",
+  "description": "Exposição e acervo digital Ciência Delas — 93 mulheres na Computação · 23ª SNCT 2026 (TADS · IFPI Campus Floriano)",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",

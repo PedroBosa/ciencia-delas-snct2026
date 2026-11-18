@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import RetratoEditorial from '../../components/RetratoEditorial.astro';
 import {
+  iniciais,
   miniatura,
   pesquisadoras,
   relacionadas,
@@ -177,16 +178,22 @@ const qrSvg = await gerarQrSvg(urlCanonica, { tinta: '#43318C', fundo: '#FFFFFF'
               <li>
                 <a href={`/pesquisadoras/${c.slug}`} class="item-relacionada">
                   <div class="topo-rel">
-                    {c.foto && (
-                      <img
-                        src={miniatura(c) ?? c.foto}
-                        alt=""
-                        width="44"
-                        height="55"
-                        loading="lazy"
-                        class="foto-rel"
-                      />
-                    )}
+                    {
+                      c.foto ? (
+                        <img
+                          src={miniatura(c) ?? c.foto}
+                          alt=""
+                          width="44"
+                          height="55"
+                          loading="lazy"
+                          class="foto-rel"
+                        />
+                      ) : (
+                        <span class="foto-rel foto-rel-iniciais" aria-hidden="true">
+                          {iniciais(c)}
+                        </span>
+                      )
+                    }
                     <div class="id-rel">
                       <span class="nome-rel">{c.nomeCurto}</span>
                       <span class="meta">
@@ -624,6 +631,18 @@ const qrSvg = await gerarQrSvg(urlCanonica, { tinta: '#43318C', fundo: '#FFFFFF'
     border-radius: 4px;
     border: 1px solid var(--borda-forte);
     background: #ffffff;
+  }
+
+  .foto-rel-iniciais {
+    display: grid;
+    place-items: center;
+    background: var(--bg-lavanda);
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--violeta);
+    letter-spacing: -0.02em;
+    user-select: none;
   }
 
   .id-rel {
