@@ -28,7 +28,8 @@ SNCT2026/
 │   ├── sw.js                       # Service Worker para cache offline em produção
 │   ├── marcas/                     # Variantes oficiais Ciência Delas e parceiros institucionais
 │   │   ├── ciencia-delas-app-*.png # Ícones PWA 192×192 e 512×512 (maskable)
-│   │   ├── ciencia-delas-*.svg     # 4 versões (cores, fundo-branco, branca, violeta)
+│   │   ├── ciencia-delas-*.svg     # 4 versões vetoriais (cores, fundo-branco, branca, violeta)
+│   │   ├── ciencia-delas-*.png     # 3 versões em PNG 2048×2048 sem fundo (cores, branca, violeta)
 │   │   ├── ifpi-floriano-branca.svg
 │   │   ├── mcti-governo-branca.svg
 │   │   ├── pop-ciencia-branca-{1x,2x,3x}.png
