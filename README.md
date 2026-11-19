@@ -35,8 +35,8 @@ SNCT2026/
 │   │   ├── pop-ciencia-branca-{1x,2x,3x}.png
 │   │   └── snct-2026-branca-{1x,2x,3x}.png
 │   └── pesquisadoras/
-│       ├── *.webp                  # 87 retratos em 640×800 px (WebP)
-│       └── min/*.webp              # 87 miniaturas Retina 240×300 px (WebP)
+│       ├── *.webp                  # 93 retratos em 640×800 px (WebP)
+│       └── min/*.webp              # 93 miniaturas Retina 240×300 px (WebP)
 ├── src/
 │   ├── components/
 │   │   ├── MapaBrasil.astro        # Mapa interativo por UF

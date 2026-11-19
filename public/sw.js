@@ -1,5 +1,5 @@
-const CACHE_SHELL = 'ciencia-delas-shell-v1';
-const CACHE_ASSETS = 'ciencia-delas-assets-v1';
+const CACHE_SHELL = 'ciencia-delas-shell-v2';
+const CACHE_ASSETS = 'ciencia-delas-assets-v2';
 
 const PRECACHE_URLS = [
   '/',
